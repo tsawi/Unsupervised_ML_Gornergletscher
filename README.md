@@ -1,4 +1,4 @@
-## Discovering information in glaciohydrologic seismic signals using unsupervised machine learning
+## Discovering glaciohydrologic information in seismic data using unsupervised machine learning
 ==============================
 
 
