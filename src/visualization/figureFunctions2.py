@@ -1203,10 +1203,7 @@ def plotPCA(cat00,catall,Kopt, size=5,size2=15, alpha=.5,labelpad = 5,fontsize=8
 
 
 ## plot top FPs
-    for k in range(1,Kopt+1):
-
-        catkTop = catall[catall.Cluster == k]
-        ax.scatter(catkTop.PC1,catkTop.PC3,catkTop.PC2,
+    ax.scatter(catall.PC1,catall.PC3,catall.PC2,
                       s=size2,
                       color='k',
                       alpha=1)

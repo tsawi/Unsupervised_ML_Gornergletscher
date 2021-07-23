@@ -523,6 +523,7 @@ def linearizeFP(path_proj,outfile_name,cat00):
 
 def PCAonFP(path_proj,outfile_name,cat00,numPCA=3,stand=True):
     ## performcs pca on fingerprints, returns catalog with PCs for each event
+#returns a PCA sklearn object, a dataframe of cat00 but with columns for PCs, and a numpy array of PCs (N x numPC)
 
 
     X = linearizeFP(path_proj,outfile_name,cat00)
@@ -734,9 +735,9 @@ def calcSilhScore(path_proj,outfile_name,cat00,range_n_clusters,numPCA,distMeasu
         sample_silhouette_values = silhouette_samples(X, cluster_labels)
 
 #         %  Silhouette avg
-#         avgSil = np.mean(sample_silhouette_values)
+        avgSil = np.mean(sample_silhouette_values)
 
-        avgSil = np.median(sample_silhouette_values)
+        # avgSil = np.median(sample_silhouette_values)
 
         avgSils.append(avgSil)
         if avgSil > maxSilScore:
