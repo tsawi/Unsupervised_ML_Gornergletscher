@@ -1438,9 +1438,14 @@ def plotCCMatrix(catCC,shift_cc,dataH5_path,station,channel,fmin,fmax,fs):
             cc_mat[i,j] = max_cc
             lag_mat[i,j] = lag
 
-    sns.heatmap(cc_mat)
-    # plt.figure()
-    # sns.heatmap(lag_mat)
+
+    plt.figure()
+    plt.imshow(cc_mat)
+    cbar = plt.colorbar(pad=.06)
+    cbar.set_label('Correlation coefficient',labelpad=8)#,fontsize = 14)
+    plt.clim(-1,1)
+
+    return cc_mat
 
 
 def plotCCMatrix_Synth(wf_list,shift_cc):
@@ -1449,8 +1454,8 @@ def plotCCMatrix_Synth(wf_list,shift_cc):
     cc_mat = np.zeros([len(wf_list),len(wf_list)])
     lag_mat = np.zeros([len(wf_list),len(wf_list)])
 
-    for i in range(len(catCC)):
-        for j in range(len(catCC)):
+    for i in range(len(wf_list)):
+        for j in range(len(wf_list)):
 
             wf_A = wf_list[i]
             wf_B = wf_list[j]
@@ -1462,11 +1467,13 @@ def plotCCMatrix_Synth(wf_list,shift_cc):
             cc_mat[i,j] = max_cc
             lag_mat[i,j] = lag
 
-    sns.heatmap(cc_mat)
-    # plt.figure()
-    # sns.heatmap(lag_mat)
+    plt.figure()
+    plt.imshow(cc_mat)
+    cbar = plt.colorbar(pad=.06)
+    cbar.set_label('Correlation coefficient',labelpad=8)#,fontsize = 14)
+    plt.clim(-1,1)
 
-
+    return cc_mat
 
 
 
