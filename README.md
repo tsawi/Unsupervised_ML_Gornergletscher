@@ -1,7 +1,19 @@
-SawiEtAl_2021
+## Discovering glaciohydrologic information in seismic data using unsupervised machine learning
 ==============================
 
-Unsupervised learning oat Gorner Glacier
+
+Theresa Sawi, Meredith Nettles, Ben Holtzman, John Paisley, Fabian Walter, Nate Groebner
+
+2021, in prep
+
+==============================
+
+
+We apply SpecUFEx (Spectral Unsupervised Feature Extraction; Holtzman et al., 2018) to spectrograms of icequakes and background noise from Gorner Glacier (CH; Walter et al., 2009). After unsupervised clustering of the output of SpecUFEx, we discover groups of seismic signals that correlate in time to dynamic and complex glacial conditions. We interpret the sources and important characteristics of those signals, thus demonstrating the utility of unsupervised machine learning for gaining insight about complex glacial systems.
+
+
+
+
 
 Project Organization
 ------------
