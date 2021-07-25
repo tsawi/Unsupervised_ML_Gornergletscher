@@ -192,7 +192,8 @@ def plotMedianSpectra(path_proj,cat00,Kopt,fSTFT,station,leg,lw=1,normed='median
     ax.set_ylabel(ylabell)
 
 
-def plotFeaturesRolling(df,Kopt,width2,height2,**plt_kwargs):
+def plotFeaturesRolling(df,winSize,Kopt,width2,height2,title='',xlabelfont=14,**plt_kwargs):
+    import warnings
 
     tstart      =     plt_kwargs['tstart']
     tend        =     plt_kwargs['tend']
@@ -207,28 +208,44 @@ def plotFeaturesRolling(df,Kopt,width2,height2,**plt_kwargs):
     ax1, ax2, ax3 = axes
 
 
-    winSize = 60
+
+    mss = 5
+    lss = '-'
+
+
     for k in range(1,Kopt+1):
 
 
-        plotFeaturesTimeline(df,Kopt,'SC',size=3,ax=ax1,**plt_kwargs)
-        df.SC.rolling(window=winSize,min_periods=1).mean().plot(ax=ax1,linestyle='-',marker='None',color='black')
-        ax1.set_ylabel('Spectral centroid (Hz)')
+        plotFeaturesTimeline2(df,Kopt,'SC',size=3,ax=ax1,**plt_kwargs)
+    #     df.SC.rolling(window=winSize,min_periods=1).mean().plot(ax=ax1,linestyle='None',lw=1,marker='o',ms=1,color='black',alpha=.8)
+
+        ##depreciation warning for loffset of resampling
+        warnings.filterwarnings("ignore")#, category=DeprecationWarning)
+
+        df.SC.resample(winSize,closed='left',label='left', loffset='12H').mean().plot(ax=ax1,linestyle=lss,lw=1,marker='o',ms=mss,color='black',alpha=.8)
+        ax1.set_title('Spectral centroid ($Hz$)',loc='left')
+        ax1.set_ylabel('')
 
 
-        df.log10RSAM.rolling(window=winSize,min_periods=1).mean().plot(ax=ax2,linestyle='-',marker='None',color='black')
-        plotFeaturesTimeline(df,Kopt,'log10RSAM',size=3,ax=ax2,**plt_kwargs)
-        ax2.set_ylabel('log10RSAM ($m/s^2$)')
+        plotFeaturesTimeline2(df,Kopt,'log10RSAM',size=3,ax=ax2,**plt_kwargs)
+    #     df.log10RSAM.rolling(window=winSize,min_periods=1).mean().plot(ax=ax2,linestyle='None',lw=1,marker='o',ms=1,color='black',alpha=.8)
+        df.log10RSAM.resample(winSize,closed='left',label='left', loffset='12H').mean().plot(ax=ax2,linestyle=lss,lw=1,marker='o',ms=mss,color='black',alpha=.8)
 
-        plotFeaturesTimeline(df,Kopt,'log10P2P',size=3,ax=ax3,**plt_kwargs)
-        df.log10P2P.rolling(window=winSize,min_periods=1).mean().plot(ax=ax3,linestyle='-',marker='None',color='black')
-        ax3.set_ylabel('log10P2P ($m/s^2$)')
+        ax2.set_title('log10RSAM ($m/s^2$)',loc='left')
+        ax2.set_ylabel('')
 
+
+        plotFeaturesTimeline2(df,Kopt,'log10P2P',size=3,ax=ax3,**plt_kwargs)
+    #     df.log10P2P.rolling(window=winSize,min_periods=1).mean().plot(ax=ax3,linestyle='None',lw=1,marker='o',ms=1,color='black',alpha=.8)
+        df.log10P2P.resample(winSize,closed='left',label='left', loffset='12H').mean().plot(ax=ax3,linestyle=lss,lw=1,marker='o',ms=mss,color='black',alpha=.8)
+
+        ax3.set_title('log10P2P ($m/s^2$)',loc='left')
+        ax3.set_ylabel('')
 
 
     for ax in axes:
         for tick in ax.get_xticklabels():
-            tick.set_rotation(45)
+            tick.set_rotation(0)
 
         ax.set_xlim(tstart,tend)
         ax.set_xticks(day_ticks)
@@ -244,6 +261,11 @@ def plotFeaturesRolling(df,Kopt,width2,height2,**plt_kwargs):
 
     ax1.set_xlabel('')
     ax2.set_xlabel('')
+    ax3.set_xlabel('Date, 2007',fontsize=xlabelfont)
+
+    plt.suptitle(title,fontsize=20)
+    plt.subplots_adjust(wspace=0,hspace=.8)
+
 
 
 
@@ -278,7 +300,7 @@ def plotFeaturesTimeline(df,Kopt,feature,size=3,ax=None,**plt_kwargs):
               ms=size)
 
     for tick in ax.get_xticklabels():
-        tick.set_rotation(45)
+        tick.set_rotation(0)
 
     ax.set_xlim(tstart,tend)
     ax.set_xticks(day_ticks)
@@ -292,14 +314,17 @@ def plotFeaturesTimeline(df,Kopt,feature,size=3,ax=None,**plt_kwargs):
 
     ax.yaxis.grid()
 
+    lw2=2
+    alphaT=.6
+    lc='k'
+
     # axes.axvline(calvet,c='green',linestyle='--',linewidth=3, alpha=alphaT)
-    # ax.axvline(supraDraint,c='k',linestyle='--',linewidth=lw2, alpha=alphaT)
-    # ax.axvline(subDraint,c='k',linestyle='--',linewidth=lw2, alpha=alphaT)
-    # ax.axvline(drainEndt,c='k',linestyle='--',linewidth=lw2, alpha=alphaT)
+    ax.axvline(supraDraint,c=lc,linestyle='--',linewidth=lw2, alpha=alphaT)
+    ax.axvline(subDraint,c=lc,linestyle='--',linewidth=lw2, alpha=alphaT)
+    ax.axvline(drainEndt,c=lc,linestyle='--',linewidth=lw2, alpha=alphaT)
     ax.yaxis.grid()
     for i in range(numDays):
-        ax.axvline(hourMaxTemp[i],c='gray',linestyle='--',linewidth=2,alpha=0.3)
-
+        ax.axvline(hourMaxTemp[i],c='gray',linestyle='--',linewidth=1,alpha=0.3)
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 
 
@@ -1198,18 +1223,22 @@ def plotPCA(cat00,catall,Kopt, size=5,size2=15, alpha=.5,labelpad = 5,fontsize=8
         catk = cat00[cat00.Cluster == k]
         ax.scatter(catk.PC1,catk.PC3,catk.PC2,
                       s=size,
+                      marker='x',
                       color=colors[k-1],
                       alpha=alpha)
 
 
-## plot top FPs
+# plot top FPs
     ax.scatter(catall.PC1,catall.PC3,catall.PC2,
                       s=size2,
+                      marker='x',
                       color='k',
                       alpha=1)
 
-
+    # sm = plt.cm.ScalarMappable(cmap=colors,
+    #                            norm=plt.Normalize(vmin=df_stat.Cluster(),vmax=df_stat.Cluster()))
     axLabel = 'PC'#'Principal component '#label for plotting
+    # cbar = plt.colorbar(sm,label=stat_name,shrink=.6,pad=.3);
 
     ax.set_xlabel(f'{axLabel} 1',labelpad=labelpad, fontsize = fontsize);
     ax.set_ylabel(f'{axLabel} 3',labelpad=labelpad, fontsize = fontsize);
@@ -1230,7 +1259,7 @@ def plotPCA(cat00,catall,Kopt, size=5,size2=15, alpha=.5,labelpad = 5,fontsize=8
 
 
 
-def plotPCA_Stat(cat00, catall, df_stat, stat_name, Kopt, cmap,size=5,size2=100,alpha = .8,labelpad=10, fontsize=12,ax=None, fig=None,**plt_kwargs):
+def plotPCA_Stat(cat00, catall, df_stat, stat_name, Kopt, cmap,cbar=True,size=5,size2=100,alpha = .8,labelpad=10, fontsize=12,ax=None, fig=None,**plt_kwargs):
 
 
 
@@ -1254,27 +1283,29 @@ def plotPCA_Stat(cat00, catall, df_stat, stat_name, Kopt, cmap,size=5,size2=100,
                                    norm=plt.Normalize(vmin=df_stat.min(),vmax=df_stat.max()))
 
 
+    if cbar:
+        cbar = plt.colorbar(sm,label=stat_name,shrink=.6,pad=.3);
 
-    im = ax.scatter(cat00.PC1, cat00.PC3,cat00.PC2,
+        if stat_name == 'Date, 2007':
+            cbar.ax.set_yticklabels(pd.to_datetime(cbar.get_ticks()).strftime(date_format='%b %d'))
+
+
+            
+    ax.scatter(cat00.PC1, cat00.PC3,cat00.PC2,
                     s=size,
                     c=df_stat,
+                    marker='x',
                     cmap=cmap);
 
 
-    ## plot top FPs
-    for k in range(1,Kopt+1):
 
-        catkTop = catall[catall.Cluster == k]
-        ax.scatter(catkTop.PC1,catkTop.PC3,catkTop.PC2,
+    ax.scatter(catall.PC1,catall.PC3,catall.PC2,
                       s=size2,
+                      marker='x',
                       color='k',
                       alpha=1)
 
 
-    cbar = plt.colorbar(sm,label=stat_name,shrink=.6,pad=.12,orientation='horizontal');
-
-    if stat_name == 'Date, 2007':
-        cbar.ax.set_xticklabels(pd.to_datetime(cbar.get_ticks()).strftime(date_format='%b %d'))
 
 
     axLabel = 'PC'#'Principal component '#label for plotting
@@ -1443,6 +1474,7 @@ def plotCCMatrix(catCC,shift_cc,dataH5_path,station,channel,fmin,fmax,fs):
     plt.imshow(cc_mat)
     cbar = plt.colorbar(pad=.06)
     cbar.set_label('Correlation coefficient',labelpad=8)#,fontsize = 14)
+
     plt.clim(-1,1)
 
     return cc_mat
