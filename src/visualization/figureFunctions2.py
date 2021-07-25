@@ -216,7 +216,7 @@ def plotFeaturesRolling(df,winSize,Kopt,width2,height2,title='',xlabelfont=14,**
     for k in range(1,Kopt+1):
 
 
-        plotFeaturesTimeline2(df,Kopt,'SC',size=3,ax=ax1,**plt_kwargs)
+        plotFeaturesTimeline(df,Kopt,'SC',size=3,ax=ax1,**plt_kwargs)
     #     df.SC.rolling(window=winSize,min_periods=1).mean().plot(ax=ax1,linestyle='None',lw=1,marker='o',ms=1,color='black',alpha=.8)
 
         ##depreciation warning for loffset of resampling
@@ -227,7 +227,7 @@ def plotFeaturesRolling(df,winSize,Kopt,width2,height2,title='',xlabelfont=14,**
         ax1.set_ylabel('')
 
 
-        plotFeaturesTimeline2(df,Kopt,'log10RSAM',size=3,ax=ax2,**plt_kwargs)
+        plotFeaturesTimeline(df,Kopt,'log10RSAM',size=3,ax=ax2,**plt_kwargs)
     #     df.log10RSAM.rolling(window=winSize,min_periods=1).mean().plot(ax=ax2,linestyle='None',lw=1,marker='o',ms=1,color='black',alpha=.8)
         df.log10RSAM.resample(winSize,closed='left',label='left', loffset='12H').mean().plot(ax=ax2,linestyle=lss,lw=1,marker='o',ms=mss,color='black',alpha=.8)
 
@@ -235,7 +235,7 @@ def plotFeaturesRolling(df,winSize,Kopt,width2,height2,title='',xlabelfont=14,**
         ax2.set_ylabel('')
 
 
-        plotFeaturesTimeline2(df,Kopt,'log10P2P',size=3,ax=ax3,**plt_kwargs)
+        plotFeaturesTimeline(df,Kopt,'log10P2P',size=3,ax=ax3,**plt_kwargs)
     #     df.log10P2P.rolling(window=winSize,min_periods=1).mean().plot(ax=ax3,linestyle='None',lw=1,marker='o',ms=1,color='black',alpha=.8)
         df.log10P2P.resample(winSize,closed='left',label='left', loffset='12H').mean().plot(ax=ax3,linestyle=lss,lw=1,marker='o',ms=mss,color='black',alpha=.8)
 
@@ -1259,11 +1259,8 @@ def plotPCA(cat00,catall,Kopt, size=5,size2=15, alpha=.5,labelpad = 5,fontsize=8
 
 
 
-def plotPCA_Stat(cat00, catall, df_stat, stat_name, Kopt, cmap,cbar=True,size=5,size2=100,alpha = .8,labelpad=10, fontsize=12,ax=None, fig=None,**plt_kwargs):
+def plotPCA_Stat(cat00, catall, df_stat, stat_name, Kopt, cmap,cbar=True,size=5,size2=100,alpha = .8,labelpad=10, fontsize=12,ax=None, fig=None):
 
-
-
-    colors      =     plt_kwargs['colors']
 
 
     if fig is None:
@@ -1295,6 +1292,7 @@ def plotPCA_Stat(cat00, catall, df_stat, stat_name, Kopt, cmap,cbar=True,size=5,
                     s=size,
                     c=df_stat,
                     marker='x',
+                    alpha=alpha,
                     cmap=cmap);
 
 

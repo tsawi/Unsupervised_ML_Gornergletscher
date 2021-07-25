@@ -115,6 +115,7 @@ def getSpectra(evID,station,path_proj,normed=True):
 
     matSum = specMat.sum(1)
 
+    mat.get('fSTFT')
     return matSum,specMat
 
 def getSpectra_fromWF(evID,dataH5_path,station,channel,normed=True):
@@ -330,6 +331,21 @@ def getDailyTempDiff(garciaDF_H,garciaDF_D,**plt_kwargs):
 
     mean_mean_diff = np.mean(mean_diff,axis=0)
     return mean_mean_diff
+    
+##################################################################################################
+# .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
+##################################################################################################
+
+
+def getFP(evID,path_proj,outfile_name):
+    
+    with h5py.File(path_proj + outfile_name,'r') as MLout:
+
+        fp = MLout['SpecUFEX_output/fprints'].get(str(evID))[:]
+        
+        return fp
+    
+    
 ##################################################################################################
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 ##################################################################################################
