@@ -881,7 +881,7 @@ def KMeansSpectra(sgram_df,range_nclusters=range(2,10)):
 
     Returns
     -------
-    None.
+    sgram_df
 
     '''
 ## take Kmeans of spectra, add cluster labels to sgram sf

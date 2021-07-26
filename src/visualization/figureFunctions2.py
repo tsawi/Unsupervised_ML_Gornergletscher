@@ -996,7 +996,7 @@ def plotGPS(gps_data,ax=None,ylabel='right',**plt_kwargs):
 
 
     if ylabel=='right':
-        ax2.set_ylabel('Relative GPS \n displacement (m)',color='darkgreen')#  \n ($cm/day$)
+        ax2.set_ylabel('GPS velocity (m/hr)',color='darkgreen')#  \n ($cm/day$)
         # ax3.set_yticks([0,5,15,25,35])
         # ax3.set_yticklabels(['0','5','15','25','35'])
     else:
@@ -1475,7 +1475,7 @@ def plotCCMatrix(catCC,shift_cc,dataH5_path,station,channel,fmin,fmax,fs):
 
     plt.clim(-1,1)
 
-    return cc_mat
+    return cc_mat,lag_mat
 
 
 def plotCCMatrix_Synth(wf_list,shift_cc):
