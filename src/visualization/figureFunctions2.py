@@ -977,10 +977,10 @@ def plotBarStacked(cat00,Kopt,barWidth=.9,timeSpan='D',ax=None,**plt_kwargs):
 
 def plotGPS(gps_data,ax=None,ylabel='right',**plt_kwargs):
 
-    
+
     if ax is None:
         ax = plt.gca()
-        
+
     ax2 = ax.twinx()
 
 
@@ -1287,7 +1287,7 @@ def plotPCA_Stat(cat00, catall, df_stat, stat_name, Kopt, cmap,cbar=True,size=5,
             cbar.ax.set_yticklabels(pd.to_datetime(cbar.get_ticks()).strftime(date_format='%b %d'))
 
 
-            
+
     ax.scatter(cat00.PC1, cat00.PC3,cat00.PC2,
                     s=size,
                     c=df_stat,

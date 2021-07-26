@@ -314,11 +314,11 @@ def getDailyTempDiff(meteor_df,**plt_kwargs):
 
     meteor_df1 = meteor_df[meteor_df.datetime>=tstart]
     meteor_df1 = meteor_df1[meteor_df1.datetime<tend]
-    
+
     ##BACKFILL
     temp_H = meteor_df1.temp.resample('H',loffset='30T').mean().ffill()
     temp_D = meteor_df1.temp.resample('D',loffset='12H').mean().ffill()
-    
+
 
     temp_H_a = np.array(temp_H)
 
@@ -331,21 +331,34 @@ def getDailyTempDiff(meteor_df,**plt_kwargs):
 
     mean_mean_diff = np.mean(mean_diff,axis=0)
     return mean_mean_diff
-    
+
 ##################################################################################################
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 ##################################################################################################
 
 
 def getFP(evID,path_proj,outfile_name):
-    
+
     with h5py.File(path_proj + outfile_name,'r') as MLout:
 
         fp = MLout['SpecUFEX_output/fprints'].get(str(evID))[:]
-        
+
         return fp
-    
-    
+##################################################################################################
+# .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
+##################################################################################################
+
+
+
+def getMaxIndexFP(fp):
+
+    iMax = np.argmax(np.max(fp, axis=1))
+    jMax = np.argmax(np.max(fp, axis=0))
+
+    return iMax,jMax ##row and column indices of max falue in FP
+
+
+
 ##################################################################################################
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 ##################################################################################################
@@ -965,41 +978,41 @@ def swapLabels(cat,A,B):
 
 def catMergeFromH5(path_Cat,path_proj,outfile_name):
     '''
-    Keep csv catalog events based on H5 used in SpecUFEx 
-    
+    Keep csv catalog events based on H5 used in SpecUFEx
+
     '''
-    
+
     ## read 'raw' catalog, the immutable one
     cat_raw = pd.read_csv(path_Cat)
-    cat_raw['event_ID'] = [str(int(evv)) for evv in cat_raw['event_ID']]    
-    
-    
+    cat_raw['event_ID'] = [str(int(evv)) for evv in cat_raw['event_ID']]
+
+
     ## load event IDs from H5
     MLout =  h5py.File(path_proj + outfile_name,'r')
     evID_kept = [evID.decode('utf-8') for evID in MLout['catalog/event_ID/'][:]]
     MLout.close()
-    
+
     ## put H5 events into pandas dataframe
     df_kept = pd.DataFrame({'event_ID':evID_kept})
 
     ## merge based on event ID
     cat00 = pd.merge(cat_raw,df_kept,on='event_ID')
-    
+
     ## if length of H5 events and merged catalog are equal, then success
     if len(evID_kept) == len(cat00):
         print(f'{len(cat00)} events kept, merge sucessful')
     else:
         print('check merge -- error may have occurred ')
-    
-    
+
+
     ## convert to datetime, set as index
     cat00['datetime'] = [pd.to_datetime(i) for i in cat00.datetime]
     cat00['datetime_index']= [pd.to_datetime(i) for i in cat00.datetime]
-    cat00 = cat00.set_index('datetime_index')    
+    cat00 = cat00.set_index('datetime_index')
 
 
     return cat00
-        
+
 
 
 
