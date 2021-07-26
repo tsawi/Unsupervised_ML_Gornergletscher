@@ -192,15 +192,13 @@ def plotMedianSpectra(path_proj,cat00,Kopt,fSTFT,station,leg,lw=1,normed='median
     ax.set_ylabel(ylabell)
 
 
-def plotFeaturesRolling(df,winSize,Kopt,width2,height2,title='',xlabelfont=14,**plt_kwargs):
+def plotFeaturesRolling(df,winSize,Kopt,width2,height2,dotSize=4,title='',xlabelfont=14,**plt_kwargs):
     import warnings
 
     tstart      =     plt_kwargs['tstart']
     tend        =     plt_kwargs['tend']
     day_ticks   =     plt_kwargs['day_ticks']
     day_labels  =     plt_kwargs['day_labels']
-    hourMaxTemp =     plt_kwargs['hourMaxTemp']
-    colors      =     plt_kwargs['colors']
     numDays     =     plt_kwargs['numDays']
 
 
@@ -216,7 +214,7 @@ def plotFeaturesRolling(df,winSize,Kopt,width2,height2,title='',xlabelfont=14,**
     for k in range(1,Kopt+1):
 
 
-        plotFeaturesTimeline(df,Kopt,'SC',size=3,ax=ax1,**plt_kwargs)
+        plotFeaturesTimeline(df,Kopt,'SC',size=dotSize,ax=ax1,**plt_kwargs)
     #     df.SC.rolling(window=winSize,min_periods=1).mean().plot(ax=ax1,linestyle='None',lw=1,marker='o',ms=1,color='black',alpha=.8)
 
         ##depreciation warning for loffset of resampling
@@ -227,7 +225,7 @@ def plotFeaturesRolling(df,winSize,Kopt,width2,height2,title='',xlabelfont=14,**
         ax1.set_ylabel('')
 
 
-        plotFeaturesTimeline(df,Kopt,'log10RSAM',size=3,ax=ax2,**plt_kwargs)
+        plotFeaturesTimeline(df,Kopt,'log10RSAM',size=dotSize,ax=ax2,**plt_kwargs)
     #     df.log10RSAM.rolling(window=winSize,min_periods=1).mean().plot(ax=ax2,linestyle='None',lw=1,marker='o',ms=1,color='black',alpha=.8)
         df.log10RSAM.resample(winSize,closed='left',label='left', loffset='12H').mean().plot(ax=ax2,linestyle=lss,lw=1,marker='o',ms=mss,color='black',alpha=.8)
 
@@ -235,7 +233,7 @@ def plotFeaturesRolling(df,winSize,Kopt,width2,height2,title='',xlabelfont=14,**
         ax2.set_ylabel('')
 
 
-        plotFeaturesTimeline(df,Kopt,'log10P2P',size=3,ax=ax3,**plt_kwargs)
+        plotFeaturesTimeline(df,Kopt,'log10P2P',size=dotSize,ax=ax3,**plt_kwargs)
     #     df.log10P2P.rolling(window=winSize,min_periods=1).mean().plot(ax=ax3,linestyle='None',lw=1,marker='o',ms=1,color='black',alpha=.8)
         df.log10P2P.resample(winSize,closed='left',label='left', loffset='12H').mean().plot(ax=ax3,linestyle=lss,lw=1,marker='o',ms=mss,color='black',alpha=.8)
 
@@ -267,8 +265,6 @@ def plotFeaturesRolling(df,winSize,Kopt,width2,height2,title='',xlabelfont=14,**
     plt.subplots_adjust(wspace=0,hspace=.8)
 
 
-
-
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 
 
@@ -284,7 +280,9 @@ def plotFeaturesTimeline(df,Kopt,feature,size=3,ax=None,**plt_kwargs):
     hourMaxTemp =     plt_kwargs['hourMaxTemp']
     colors      =     plt_kwargs['colors']
     numDays     =     plt_kwargs['numDays']
-
+    supraDraint =     plt_kwargs['supraDraint']
+    subDraint      =     plt_kwargs['subDraint']
+    drainEndt     =     plt_kwargs['drainEndt']
 
     for clus in range(1,Kopt+1):
 
@@ -979,11 +977,12 @@ def plotBarStacked(cat00,Kopt,barWidth=.9,timeSpan='D',ax=None,**plt_kwargs):
 
 def plotGPS(gps_data,ax=None,ylabel='right',**plt_kwargs):
 
+    
+    if ax is None:
+        ax = plt.gca()
+        
     ax2 = ax.twinx()
 
-
-    if ax2 is None:
-        ax2 = plt.gca()
 
     tstart      =     plt_kwargs['tstart']
     tend        =     plt_kwargs['tend']
@@ -1011,13 +1010,14 @@ def plotGPS(gps_data,ax=None,ylabel='right',**plt_kwargs):
     ax2.set_xlim(tstart,tend)
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 
-def plotLake(garciaDF_3H,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_kwargs):
+def plotLake(lake_df,rain_df,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_kwargs):
 
 
     tstart      =     plt_kwargs['tstart']
     tend        =     plt_kwargs['tend']
     day_ticks   =     plt_kwargs['day_ticks']
     day_labels  =     plt_kwargs['day_labels']
+    numDays      =     plt_kwargs['numDays']
 
 
 
@@ -1054,9 +1054,9 @@ def plotLake(garciaDF_3H,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_kwar
     [t.set_color('b') for t in ax3.yaxis.get_ticklabels()]
 
 
-    ax3.plot(garciaDF_3H.lake_3H,c='b',lw=1,ls='--',label=label)
+    ax3.plot(lake_df.lake,c='b',lw=1,ls='--',label=label)
 
-    rain10 = garciaDF_3H.rain_3H * 10 #convert cm to mm
+    rain10 = rain_df * 10 #convert cm to mm
     ax3.plot(rain10,c='b',label=labelR,lw=1)
 
     ax3.set_xticks(day_ticks)
@@ -1064,17 +1064,17 @@ def plotLake(garciaDF_3H,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_kwar
 
     ax3.set_xlabel('')
     ax3.set_xlim(tstart,tend)
-    ax3.set_ylim(0,38)
+#     ax3.set_ylim(0,44)
+#     ax.set_ylim(0,38)
 
     # for i in range(numDays):
-    #     ax.axvline(hourMaxTemp[i],c='gray',linestyle='--',linewidth=1,alpha=1)
+    #     ax.axvline(hourMaxTemp[i],c='gray',linestyle='--',linewidth=1,alpha=.5)
 
     if legend is True:
         ax3.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
 
     ax3.set_xlim(tstart,tend)
     ax.set_xlim(tstart,tend)
-
 
 def plotTemp(garciaDF_3H,ax=None,labels='on',**plt_kwargs):
 

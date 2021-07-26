@@ -307,26 +307,26 @@ def makeHourlyDF(ev_perhour_clus):
 
 
 
-def getDailyTempDiff(garciaDF_H,garciaDF_D,**plt_kwargs):
+def getDailyTempDiff(meteor_df,**plt_kwargs):
 
     tstart      =     plt_kwargs['tstartreal']
     tend        =     plt_kwargs['tendreal']
 
-    garciaDF_H1 = garciaDF_H[garciaDF_H.datetime>=tstart]
-    garciaDF_H1 = garciaDF_H1[garciaDF_H1.datetime<tend]
+    meteor_df1 = meteor_df[meteor_df.datetime>=tstart]
+    meteor_df1 = meteor_df1[meteor_df1.datetime<tend]
+    
+    ##BACKFILL
+    temp_H = meteor_df1.temp.resample('H',loffset='30T').mean().ffill()
+    temp_D = meteor_df1.temp.resample('D',loffset='12H').mean().ffill()
+    
 
-    garciaDF_D1 = garciaDF_D[garciaDF_D.datetime>=tstart]
-    garciaDF_D1 = garciaDF_D1[garciaDF_D1.datetime<tend]
-
-
-    temp_H = garciaDF_H1.temp_H.bfill()
     temp_H_a = np.array(temp_H)
 
-    temp_H_a_r = temp_H_a.reshape(len(garciaDF_D1),24)
+    temp_H_a_r = temp_H_a.reshape(len(temp_D),24)
     mean_diff = []
     for i in range(len(temp_H_a_r[:,0])):
     #     plt.plot(temp_H_a_r[i,:] - garciaDF_D1.temp_D.iloc[i])
-        mean_diff.append(temp_H_a_r[i,:] - garciaDF_D1.temp_D.iloc[i])
+        mean_diff.append(temp_H_a_r[i,:] - temp_D.iloc[i])
 
 
     mean_mean_diff = np.mean(mean_diff,axis=0)
@@ -962,6 +962,44 @@ def swapLabels(cat,A,B):
 
 
 
+
+def catMergeFromH5(path_Cat,path_proj,outfile_name):
+    '''
+    Keep csv catalog events based on H5 used in SpecUFEx 
+    
+    '''
+    
+    ## read 'raw' catalog, the immutable one
+    cat_raw = pd.read_csv(path_Cat)
+    cat_raw['event_ID'] = [str(int(evv)) for evv in cat_raw['event_ID']]    
+    
+    
+    ## load event IDs from H5
+    MLout =  h5py.File(path_proj + outfile_name,'r')
+    evID_kept = [evID.decode('utf-8') for evID in MLout['catalog/event_ID/'][:]]
+    MLout.close()
+    
+    ## put H5 events into pandas dataframe
+    df_kept = pd.DataFrame({'event_ID':evID_kept})
+
+    ## merge based on event ID
+    cat00 = pd.merge(cat_raw,df_kept,on='event_ID')
+    
+    ## if length of H5 events and merged catalog are equal, then success
+    if len(evID_kept) == len(cat00):
+        print(f'{len(cat00)} events kept, merge sucessful')
+    else:
+        print('check merge -- error may have occurred ')
+    
+    
+    ## convert to datetime, set as index
+    cat00['datetime'] = [pd.to_datetime(i) for i in cat00.datetime]
+    cat00['datetime_index']= [pd.to_datetime(i) for i in cat00.datetime]
+    cat00 = cat00.set_index('datetime_index')    
+
+
+    return cat00
+        
 
 
 
