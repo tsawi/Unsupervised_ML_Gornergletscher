@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from obspy import read
 from scipy.fft import fft, fftfreq
+from obspy.signal.cross_correlation import correlate, xcorr_max
 
 import datetime as dtt
 
@@ -798,6 +799,86 @@ def calcSilhScore(path_proj,outfile_name,cat00,range_n_clusters,numPCA,distMeasu
 
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 
+
+def calcCCMatrix(catRep,shift_cc,dataH5_path,station,channel,fmin,fmax,fs):
+    '''
+    catRep   : (pandas.Dataframe) catalog with event IDs
+    
+    shift_cc : (int) Number of samples to shift for cross correlation. 
+                    The cross-correlation will consist of 2*shift+1 or 
+                    2*shift samples. The sample with zero shift will be in the middle.
+                    
+    
+    Returns np.array
+    
+    '''    
+    
+    cc_mat = np.zeros([len(catRep),len(catRep)])
+    lag_mat = np.zeros([len(catRep),len(catRep)])
+
+    for i in range(len(catRep)):
+        for j in range(len(catRep)):
+
+            evIDA = catRep.event_ID.iloc[i]
+            evIDB = catRep.event_ID.iloc[j]
+
+
+            wf_A = getWF(evIDA,dataH5_path,station,channel,fmin=fmin,fmax=fmax,fs=fs)
+            wf_B = getWF(evIDB,dataH5_path,station,channel,fmin=fmin,fmax=fmax,fs=fs)
+
+
+
+            cc = correlate(wf_A, wf_B, shift_cc)
+            lag, max_cc = xcorr_max(cc)
+
+            cc_mat[i,j] = max_cc
+            lag_mat[i,j] = lag
+
+
+    return cc_mat,lag_mat
+
+# .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
+
+
+def calcCorr_template(wf_A,catRep,shift_cc,dataH5_path,station,channel,fmin,fmax,fs):
+    ''' Calculate cross-correlation matrix and lag time for max CC coeg=f
+    
+    wf_A     : (np.array) wf template to match other waveforms 
+    
+    catRep   : (pandas.Dataframe) catalog with event IDs
+    
+    shift_cc : (int) Number of samples to shift for cross correlation. 
+                    The cross-correlation will consist of 2*shift+1 or 
+                    2*shift samples. The sample with zero shift will be in the middle.
+                    
+    
+    Returns np.array
+    '''
+
+    
+    cc_vec = np.zeros([len(catRep)]) #list cc coef
+    
+    lag_vec = np.zeros([len(catRep)]) #list lag time (samples) to get max cc coef
+    
+
+    for j in range(len(catRep)):
+
+        evIDB = catRep.event_ID.iloc[j]
+
+        wf_B = getWF(evIDB,dataH5_path,station,channel,fmin=fmin,fmax=fmax,fs=fs)
+
+
+
+        cc = correlate(wf_A, wf_B, shift_cc)
+        lag, max_cc = xcorr_max(cc)
+
+        cc_vec[i] = max_cc
+        lag_vec[i] = lag
+
+
+    return cc_vec,lag_vec
+
+# .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 
 
 def compileSpectraFromWF(cat00,dataH5_path,station,channel,fmin,fmax):

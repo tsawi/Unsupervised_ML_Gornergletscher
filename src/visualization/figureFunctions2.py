@@ -417,7 +417,7 @@ def plotSpines(cat=None,k=None,axs=None,barWidth=10,alphaBar=.6,**plt_kwargs):
 
 
 
-def plotMap(cat_map,colorBy='all',k='',ax=None,size=10,alpha=.7, map_lim=None,buff=15,**plt_kwargs):
+def plotMap(cat_map,colorBy='all',k='',ax=None,size=10,alpha=.7, map_lim=None,buff=15,marker='o',lw=1,**plt_kwargs):
     lakexcsv = pd.read_csv('/Users/theresasawi/Documents/SpecUFEx_v1/GARCIA_BundledData2007/lakeshore_x.csv',names=['x'])
     lakeycsv = pd.read_csv('/Users/theresasawi/Documents/SpecUFEx_v1/GARCIA_BundledData2007/lakeshore_y.csv',names=['y'])
 
@@ -434,7 +434,7 @@ def plotMap(cat_map,colorBy='all',k='',ax=None,size=10,alpha=.7, map_lim=None,bu
     if ax is None:
         ax = plt.gca()
 
-    ax.plot(lakexcsv.x,lakeycsv.y)
+    ax.plot(lakexcsv.x,lakeycsv.y,color='steelblue')
     ax.fill(lakexcsv['x'], lakeycsv['y'],color='steelblue',alpha=.2)
 
     if colorBy=='all':
@@ -442,7 +442,8 @@ def plotMap(cat_map,colorBy='all',k='',ax=None,size=10,alpha=.7, map_lim=None,bu
                      color='k',
                      s=size,
                      alpha=alpha,
-                     marker='.')
+                     marker=marker)
+
 
     if colorBy==None:
         print('no data plotted')
@@ -450,18 +451,15 @@ def plotMap(cat_map,colorBy='all',k='',ax=None,size=10,alpha=.7, map_lim=None,bu
     if colorBy=='cluster':
         cat_rand = cat_map.sample(frac=1) #shuffle rows in catalog
         for i,k in enumerate(cat_rand.Cluster):
-#         for k in range(1,Kopt+1):
-#             k = int(k)
-#             clus_cat = cat_map[cat_map.Cluster==k]
             x = cat_rand.X_m.iloc[i]
             y = cat_rand.Y_m.iloc[i]
             ax.scatter(x, y,
-                         color=colors[k-1],
-                         # edgecolors='k',
-                           # linewidths=1,
+                         color='none',
+                         edgecolors=colors[k-1],
+                         linewidths=lw,
                          s=size,
                          alpha=alpha,
-                         marker='.');
+                         marker=marker);
 
     if colorBy=='oneCluster':
         clus_cat = cat_map[cat_map.Cluster==k]
@@ -1443,9 +1441,12 @@ def plotConfusionMatrix(cat00,sgram_df_clustered,norm_by='true',ax=None):
 
 
 
-def plotCCMatrix(catCC,shift_cc,dataH5_path,station,channel,fmin,fmax,fs):
+def plotCCMatrix(catCC,shift_cc,dataH5_path,station,channel,fmin,fmax,fs,ax=None):
 ###    shift_cc : #Number of samples to shift for cross correlation. The cross-correlation will consist of 2*shift+1 or 2*shift samples. The sample with zero shift will be in the middle.
 
+    if ax is None:
+        ax = plt.gca()
+    
     cc_mat = np.zeros([len(catCC),len(catCC)])
     lag_mat = np.zeros([len(catCC),len(catCC)])
 
@@ -1468,7 +1469,6 @@ def plotCCMatrix(catCC,shift_cc,dataH5_path,station,channel,fmin,fmax,fs):
             lag_mat[i,j] = lag
 
 
-    plt.figure()
     plt.imshow(cc_mat)
     cbar = plt.colorbar(pad=.06)
     cbar.set_label('Correlation coefficient',labelpad=8)#,fontsize = 14)
