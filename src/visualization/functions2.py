@@ -872,11 +872,115 @@ def calcCorr_template(wf_A,catRep,shift_cc,dataH5_path,station,channel,fmin,fmax
         cc = correlate(wf_A, wf_B, shift_cc)
         lag, max_cc = xcorr_max(cc)
 
-        cc_vec[i] = max_cc
-        lag_vec[i] = lag
+        cc_vec[j] = max_cc
+        lag_vec[j] = lag
 
 
     return cc_vec,lag_vec
+
+# .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
+
+def lagWF_Scalar(waveform, lag0, index_wf):
+    """
+    Shift waveform amount to match template waveform.
+
+
+    Parameters
+    ----------
+    waveform : np.array
+    
+    lag0 : int
+        Scalar from lag vector lag_vec, output of calcCorr_template.
+    index_wf : int
+        Index of waveform in catRep catalog.
+
+    Returns
+    -------
+     np.array - time-shifted waveform to get maxCC
+
+    """
+
+
+    i = index_wf
+    
+    #
+    if lag0<0:
+#         print('neg lag', lag0[i])
+        isNeg = 1
+        lag00 = int(np.abs(lag0)) #convert to int
+    else:
+#         print('pos lag', lag0[i])        
+        isNeg = 0        
+        lag00 = int(lag0)
+
+
+    padZ = np.zeros(lag00)# in samples
+    padZ = np.ones(lag00)*np.nan# in samples
+
+    if isNeg:
+        waveform_shift = np.hstack([waveform,padZ])
+        waveform_shift2 = waveform_shift[lag00:]
+        
+    else:
+        waveform_shift = np.hstack([padZ,waveform])
+        waveform_shift2 = waveform_shift[:-lag00]
+    
+    if lag0[i]==0 or lag0[i]==0.0:
+        waveform_shift2 = waveform
+        
+    return waveform_shift2
+
+
+def lagWF(waveform, lag0, index_wf):
+    """
+    Shift waveform amount to match template waveform.
+
+
+    Parameters
+    ----------
+    waveform : np.array
+    
+    lag0 : np.array
+        Matris of lag times; output of calcCC_Mat.
+    index_wf : int
+        Index of waveform in catRep catalog.
+
+    Returns
+    -------
+     np.array - time-shifted waveform to get maxCC
+
+    """
+
+
+    i = index_wf
+    
+    #
+    if lag0[i]<0:
+#         print('neg lag', lag0[i])
+        isNeg = 1
+        lag00 = int(np.abs(lag0[i])) #convert to int
+    else:
+#         print('pos lag', lag0[i])        
+        isNeg = 0        
+        lag00 = int(lag0[i])
+
+
+    padZ = np.zeros(lag00)# in samples
+    padZ = np.ones(lag00)*np.nan# in samples
+
+    if isNeg:
+        waveform_shift = np.hstack([waveform,padZ])
+        waveform_shift2 = waveform_shift[lag00:]
+        
+    else:
+        waveform_shift = np.hstack([padZ,waveform])
+        waveform_shift2 = waveform_shift[:-lag00]
+    
+    if lag0[i]==0 or lag0[i]==0.0:
+        waveform_shift2 = waveform
+        
+    return waveform_shift2
+
 
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 
@@ -1039,6 +1143,26 @@ def KMeansSpectra(sgram_df,range_nclusters=range(2,10)):
 
 
 def swapLabels(cat,A,B):
+    """
+    Swap labels bewteen Cluster A and Cluster B.
+
+    Parameters
+    ----------
+    cat : pd.DataFrame
+        Must have column names: event_ID, Cluster.
+    A : int, str
+        Original cluster assignment.
+    B : int, str
+        New cluster assignment.
+
+    Returns
+    -------
+    pd.DataFrame
+
+    """
+
+    
+
 ## swap label A to B
     dummy_variable = 999
     cat_swapped = cat.copy()

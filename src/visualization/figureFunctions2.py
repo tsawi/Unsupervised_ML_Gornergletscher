@@ -417,25 +417,85 @@ def plotSpines(cat=None,k=None,axs=None,barWidth=10,alphaBar=.6,**plt_kwargs):
 
 
 
-def plotMap(cat_map,colorBy='all',k='',ax=None,size=10,alpha=.7, map_lim=None,buff=15,marker='o',lw=1,**plt_kwargs):
-    lakexcsv = pd.read_csv('/Users/theresasawi/Documents/SpecUFEx_v1/GARCIA_BundledData2007/lakeshore_x.csv',names=['x'])
-    lakeycsv = pd.read_csv('/Users/theresasawi/Documents/SpecUFEx_v1/GARCIA_BundledData2007/lakeshore_y.csv',names=['y'])
+def plotMap(cat_map,colorBy='all',k=1,ax=None,size=10,alpha=.7, map_lim=None,buff=15,marker='o',edgecolor='cluster',lw=1,**plt_kwargs):
+    """
+    Plot lake boundaries from csv file 
+    
+    Parameters
+    ----------
+    cat_map : pd.DataFrame
+        Must have column names:  event_ID, X_m,Y_m, 
+    colorBy : str, optional
+        Color markers by cluster assignment, or make all black. 
+        The default is 'all'.
+        cluster : plots all data colored by cluster assignment
+        oneCluster: data from one cluster, set k=cluster number
+        all : plots all data, colored black
+    k : int, optional
+        Cluster number. The default is 1.
+    ax : plt.ax(), optional
+        current axis. The default is None.
+    size : int, optional
+        Size of marker. The default is 10.
+    alpha : int, optional
+        transperency of maarker. The default is .7.
+    map_lim : np.array, optional
+        limits of map boundaries. The default is None.
+    buff : int, float, optional
+        Budder around extrend of map lim. The default is 15.
+    marker : matplotlib marker type, optional
+        marker style. The default is 'o'.
+    edgecolor : color str or RGB np.array
+        marker edge color. The default is 'cluster', else is black.
+    lw : int, flaot, optional
+        line width. The default is 1.
+    **plt_kwargs : dict
+        see notebook for usage.
 
-    ##adjusted manually
-    lakexcsv['x'] = lakexcsv['x'] + 220980
-    lakeycsv['y'] = lakeycsv['y'] + -5000410
+    Returns
+    -------
+    plt.axis()
+
+    """
+    
     colors      =     plt_kwargs['colors']
-
-    x = cat_map.X_m
-    y = cat_map.Y_m
-
-
-
+    
     if ax is None:
-        ax = plt.gca()
+        ax = plt.gca()    
+    
+    
+    if plotLake:
+        ### plot lake shore boundary
+        lakexcsv = pd.read_csv('/Users/theresasawi/Documents/11_Manuscripts/Sawietal_2021/SawiEtAl_2021/data/external/GarciaEtAl_2019/processed/lakeshore_x.csv',names=['x'])
+        lakeycsv = pd.read_csv('/Users/theresasawi/Documents/11_Manuscripts/Sawietal_2021/SawiEtAl_2021/data/external/GarciaEtAl_2019/processed/lakeshore_y.csv',names=['y'])
+    
+        ##adjusted manually
+        lakexcsv['x'] = lakexcsv['x'] + 220980
+        lakeycsv['y'] = lakeycsv['y'] + -5000410
+        
+        ax.plot(lakexcsv.x,lakeycsv.y,color='steelblue')
+        ax.fill(lakexcsv['x'], lakeycsv['y'],color='steelblue',alpha=.2)    
+        ### END plot lake shore boundary    
+    
 
-    ax.plot(lakexcsv.x,lakeycsv.y,color='steelblue')
-    ax.fill(lakexcsv['x'], lakeycsv['y'],color='steelblue',alpha=.2)
+    
+
+    ##some possible map settings
+    try:
+        x = cat_map.X_m
+        y = cat_map.Y_m
+    except:
+        try:
+            x = cat_map.lat
+            y = cat_map.lon    
+        except:
+            try:
+                x = cat_map.lat
+                y = cat_map.long 
+            except:
+                pass
+
+
 
     if colorBy=='all':
         ax.scatter(x, y,
@@ -453,13 +513,26 @@ def plotMap(cat_map,colorBy='all',k='',ax=None,size=10,alpha=.7, map_lim=None,bu
         for i,k in enumerate(cat_rand.Cluster):
             x = cat_rand.X_m.iloc[i]
             y = cat_rand.Y_m.iloc[i]
-            ax.scatter(x, y,
-                         color='none',
-                         edgecolors=colors[k-1],
-                         linewidths=lw,
-                         s=size,
-                         alpha=alpha,
-                         marker=marker);
+            
+            if edgecolor=='cluster':
+            
+                ax.scatter(x, y,
+                             color='none',
+                             edgecolors=colors[k-1],
+                             linewidths=lw,
+                             s=size,
+                             alpha=alpha,
+                             marker=marker);
+                
+            else: # borkder is black, facecolor is by cluster
+                
+                ax.scatter(x, y,
+                             color=colors[k-1],
+                             edgecolors='k',
+                             linewidths=lw,
+                             s=size,
+                             alpha=alpha,
+                             marker=marker);
 
     if colorBy=='oneCluster':
         clus_cat = cat_map[cat_map.Cluster==k]
@@ -1074,7 +1147,7 @@ def plotLake(lake_df,rain_df,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_
     ax3.set_xlim(tstart,tend)
     ax.set_xlim(tstart,tend)
 
-def plotTemp(garciaDF_3H,ax=None,labels='on',**plt_kwargs):
+def plotTemp(temp_series,ax=None,labels='on',**plt_kwargs):
 
     if ax is None:
         ax = plt.gca()
@@ -1089,7 +1162,7 @@ def plotTemp(garciaDF_3H,ax=None,labels='on',**plt_kwargs):
     ax2.set_yticks([])
 
 #     [t.set_color('r') for t in ax2.yaxis.get_ticklabels()]
-    ax2.plot(garciaDF_3H.temp_3H,label='T ($C^\circ$)',c='darkred',lw=1,alpha=.5)
+    ax2.plot(temp_series,label='T ($C^\circ$)',c='darkred',lw=1,alpha=.5)
 
     #zero line
     ax2.axhline(y=0,c='darkred',linestyle='--',alpha=.5,label='0($^\circ$C)')
