@@ -671,9 +671,10 @@ def getTopFCat(cat,topF=1,startInd=0,distMeasure = "SilhScore"):
         try:
             cat0 = cat0[startInd:startInd+topF]
         except: #if less than topF number events in cluster
+            print(f"{startInd+topF} is larger than cluster {k} size (n={len(cat0)})")
             cat0 = cat0
 
-            print(f"sampled all {len(cat0)} events in cluster!")
+
 
 
         cat_topF = cat_topF.append(cat0);
@@ -684,8 +685,14 @@ def getTopFCat(cat,topF=1,startInd=0,distMeasure = "SilhScore"):
     cat_topF['Cluster'] = [int(c) for c in cat_topF.Cluster];
 
     cat_topF['datetime_index'] = [pd.to_datetime(d) for d in cat_topF.datetime];
+    
+    if distMeasure == "SilhScore":
+        cat_topF = cat_topF.sort_values(by =['Cluster','SS'])
+        
 
-    cat_topF = cat_topF.sort_values(by =['Cluster','datetime'])
+    if distMeasure == "EucDist":
+        cat_topF = cat_topF.sort_values(by =['Cluster','euc_dist'])
+
 
     cat_topF = cat_topF.set_index('datetime_index')
 
