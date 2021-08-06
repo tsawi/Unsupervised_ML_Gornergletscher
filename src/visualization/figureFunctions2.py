@@ -1070,7 +1070,7 @@ def plotGPS(gps_data,ax=None,ylabel='right',**plt_kwargs):
 
 
     if ylabel=='right':
-        ax2.set_ylabel('GPS velocity (m/hr)',color='darkgreen')#  \n ($cm/day$)
+        ax2.set_ylabel('GPS displacement (m)',color='darkgreen')#  \n ($cm/day$)
         # ax3.set_yticks([0,5,15,25,35])
         # ax3.set_yticklabels(['0','5','15','25','35'])
     else:
