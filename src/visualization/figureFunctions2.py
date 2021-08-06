@@ -112,7 +112,7 @@ def plotSgram(specMat,evID,tSTFT, fSTFT,ax=None):
 
 
 
-def plotReconstructedStates(RMM,sel_state,fSTFT,lw=1,freq_list=None,colorBy='cluster',legend='inside',bb1=1,bb2=0,ax=None,normed='median',scale=1, **plt_kwargs):
+def plotReconstructedStates(RMM,sel_state,fSTFT,lw=1,freq_list=None,colorBy='cluster',legend='inside',bb1=1,bb2=0,ax=None,normed='None',scale=1, **plt_kwargs):
 
     if ax is None:
         ax = plt.gca()
@@ -134,6 +134,9 @@ def plotReconstructedStates(RMM,sel_state,fSTFT,lw=1,freq_list=None,colorBy='clu
 
         if normed=='max':
             reconst_state = reconst_state / np.max(reconst_state)
+            
+        if normed=='None':
+            reconst_state = reconst_state ## because it's based on spectra that were normed by their medians ..... 
 
 
         reconst_state = reconst_state / scale
@@ -568,12 +571,12 @@ def plotMap(cat_map,colorBy='all',k=1,ax=None,size=10,alpha=.7, map_lim=None,buf
 #         cbar.ax.set_xticklabels(pd.to_datetime(cbar.get_ticks()).strftime(date_format='%b %d'))
 
 
-    if map_lim is None:
-        ax.set_xlim(cat_map.X_m.min()-buff,cat_map.X_m.max()+buff)
-        ax.set_ylim(cat_map.Y_m.min()-buff,cat_map.Y_m.max()+buff)
-    else:
-        ax.set_xlim(map_lim[0][0],map_lim[0][1])
-        ax.set_ylim(map_lim[1][0],map_lim[1][1])
+#     if map_lim is None:
+#         ax.set_xlim(cat_map.X_m.min()-buff,cat_map.X_m.max()+buff)
+#         ax.set_ylim(cat_map.Y_m.min()-buff,cat_map.Y_m.max()+buff)
+#     else:
+#         ax.set_xlim(map_lim[0][0],map_lim[0][1])
+#         ax.set_ylim(map_lim[1][0],map_lim[1][1])
 
     # ax.set_xticks([])
 
