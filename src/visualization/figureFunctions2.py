@@ -93,8 +93,8 @@ def plotSgram(specMat,evID,tSTFT, fSTFT,ax=None):
 
     plt.pcolormesh(tSTFT, fSTFT, specMat,cmap=cm.magma, shading='auto')
 
-#     cbar = plt.colorbar(pad=.06)
-# #     cbar.set_label('dB',labelpad=8)#,fontsize = 14)
+    cbar = plt.colorbar(pad=.06)
+    cbar.set_label('dB',labelpad=8)#,fontsize = 14)
 #     plt.clim(0,45)
     date_title = str(pd.to_datetime('200' + evID))
     ax.set_title(date_title,pad=10)
@@ -109,10 +109,7 @@ def plotSgram(specMat,evID,tSTFT, fSTFT,ax=None):
 
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 
-
-
-
-def plotReconstructedStates(RMM,sel_state,fSTFT,lw=1,freq_list=None,colorBy='cluster',legend='inside',bb1=1,bb2=0,ax=None,normed='None',scale=1, **plt_kwargs):
+def plotReconstructedStates(RMM,sel_state_single,fSTFT,lw=1,freq_list=None,colorBy='cluster',legend='inside',bb1=1,bb2=0,ax=None,normed='None',scale=1, **plt_kwargs):
 
     if ax is None:
         ax = plt.gca()
@@ -120,8 +117,7 @@ def plotReconstructedStates(RMM,sel_state,fSTFT,lw=1,freq_list=None,colorBy='clu
     colors      =     plt_kwargs['colors']
 
 
-
-    for i, st in enumerate(sel_state):
+    for i, st in enumerate(sel_state_single):
 
 
         if colorBy=='all':
@@ -142,10 +138,10 @@ def plotReconstructedStates(RMM,sel_state,fSTFT,lw=1,freq_list=None,colorBy='clu
         reconst_state = reconst_state / scale
 
         ax.plot(fSTFT,reconst_state,
-                label=f'S{st}',
                 lw=lw,
                 ls='--',
-                color=cc)    #     /RMM[:,st].max()
+                color=cc,
+               label=f"S{sel_state_single[i]}")    #     /RMM[:,st].max()
 
 
 
@@ -518,13 +514,14 @@ def plotMap(cat_map,colorBy='all',k=1,ax=None,size=10,alpha=.7, map_lim=None,buf
             y = cat_rand.Y_m.iloc[i]
             
             if edgecolor=='cluster':
-            
+                label = f'C{k}'
                 ax.scatter(x, y,
                              color='none',
                              edgecolors=colors[k-1],
                              linewidths=lw,
                              s=size,
                              alpha=alpha,
+                             label = label,
                              marker=marker);
                 
             else: # borkder is black, facecolor is by cluster
@@ -1108,6 +1105,8 @@ def plotLake(lake_df,rain_df,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_
         ax.set_yticks(np.arange(0,61,10))
         ax.set_yticklabels([f'{a:.0f}' for a in np.arange(0,61,10)])
         [t.set_color('b') for t in ax.yaxis.get_ticklabels()]
+#         ax.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
+
 
     if ylabel=='right':
 #         ax3.set_yticks([])
@@ -1142,8 +1141,14 @@ def plotLake(lake_df,rain_df,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_
     # for i in range(numDays):
     #     ax.axvline(hourMaxTemp[i],c='gray',linestyle='--',linewidth=1,alpha=.5)
 
-    if legend is True:
-        ax3.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
+#     if legend is True:
+#         if ylabel == 'right':
+#             ax3.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
+#             ax.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
+            
+#         if ylabel == 'left':
+#             ax.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
+#             ax3.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
 
     ax3.set_xlim(tstart,tend)
     ax.set_xlim(tstart,tend)
