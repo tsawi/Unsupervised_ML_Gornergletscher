@@ -1049,7 +1049,7 @@ def plotBarStacked(cat00,Kopt,barWidth=.9,timeSpan='D',ax=None,**plt_kwargs):
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 
 
-def plotGPS(gps_data,ax=None,ylabel='right',**plt_kwargs):
+def plotGPS(gps_data,ax=None,size=.5,ylabel='right',**plt_kwargs):
 
 
     if ax is None:
@@ -1064,7 +1064,7 @@ def plotGPS(gps_data,ax=None,ylabel='right',**plt_kwargs):
     day_labels  =     plt_kwargs['day_labels']
 
 
-    ax2.plot(gps_data,c='darkgreen',lw=1,alpha=1)
+    ax2.plot(gps_data,c='darkgreen',linestyle='None',marker='.',ms=size,alpha=1)
 
     [t.set_color('darkgreen') for t in ax2.yaxis.get_ticklabels()]
 
@@ -1104,12 +1104,10 @@ def plotLake(lake_df,rain_df,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_
     if ylabel=='left':
         ax3.set_yticks([])
         ax3.set_yticklabels('')
-        ax3 = ax
-        label='Lake height (m)'
-        labelR = 'Rain (mm)'
         ax.set_ylabel('Lake height (m) \n Rain (mm) ',color='b')
-        ax.set_yticks([0,5,15,25,35])
-        ax.set_yticklabels(['0','5','15','25','35'])
+        ax.set_yticks(np.arange(0,61,10))
+        ax.set_yticklabels([f'{a:.0f}' for a in np.arange(0,61,10)])
+        [t.set_color('b') for t in ax.yaxis.get_ticklabels()]
 
     if ylabel=='right':
 #         ax3.set_yticks([])
@@ -1128,7 +1126,7 @@ def plotLake(lake_df,rain_df,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_
     [t.set_color('b') for t in ax3.yaxis.get_ticklabels()]
 
 
-    ax3.plot(lake_df.lake,c='b',lw=1,ls='--',label=label)
+    ax3.plot(lake_df.lake,c='b',lw=4,ls='--',label=label)
 
     rain10 = rain_df * 10 #convert cm to mm
     ax3.plot(rain10,c='b',label=labelR,lw=1)
@@ -1177,7 +1175,7 @@ def plotTemp(temp_series,ax=None,labels='on',**plt_kwargs):
         ##scale line
         tx = dtt.datetime(2007, 7, 16)
         tx2 = dtt.datetime(2007, 7, 16,7,0,0)
-        txZero = dtt.datetime(2007, 7, 15)
+        txZero = dtt.datetime(2007, 7, 16)
         yZero = -18
         yMax = 30
         yMin = 20
