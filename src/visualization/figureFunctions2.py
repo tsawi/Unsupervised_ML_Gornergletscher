@@ -130,9 +130,9 @@ def plotReconstructedStates(RMM,sel_state_single,fSTFT,lw=1,freq_list=None,color
 
         if normed=='max':
             reconst_state = reconst_state / np.max(reconst_state)
-            
+
         if normed=='None':
-            reconst_state = reconst_state ## because it's based on spectra that were normed by their medians ..... 
+            reconst_state = reconst_state ## because it's based on spectra that were normed by their medians .....
 
 
         reconst_state = reconst_state / scale
@@ -418,14 +418,14 @@ def plotSpines(cat=None,k=None,axs=None,barWidth=10,alphaBar=.6,**plt_kwargs):
 
 def plotMap(cat_map,colorBy='all',k=1,ax=None,size=10,alpha=.7, map_lim=None,buff=15,marker='o',edgecolor='cluster',lw=1,**plt_kwargs):
     """
-    Plot lake boundaries from csv file 
-    
+    Plot lake boundaries from csv file
+
     Parameters
     ----------
     cat_map : pd.DataFrame
-        Must have column names:  event_ID, X_m,Y_m, 
+        Must have column names:  event_ID, X_m,Y_m,
     colorBy : str, optional
-        Color markers by cluster assignment, or make all black. 
+        Color markers by cluster assignment, or make all black.
         The default is 'all'.
         cluster : plots all data colored by cluster assignment
         oneCluster: data from one cluster, set k=cluster number
@@ -456,28 +456,28 @@ def plotMap(cat_map,colorBy='all',k=1,ax=None,size=10,alpha=.7, map_lim=None,buf
     plt.axis()
 
     """
-    
+
     colors      =     plt_kwargs['colors']
-    
+
     if ax is None:
-        ax = plt.gca()    
-    
-    
+        ax = plt.gca()
+
+
     if plotLake:
         ### plot lake shore boundary
         lakexcsv = pd.read_csv('/Users/theresasawi/Documents/11_Manuscripts/Sawietal_2021/SawiEtAl_2021/data/external/GarciaEtAl_2019/processed/lakeshore_x.csv',names=['x'])
         lakeycsv = pd.read_csv('/Users/theresasawi/Documents/11_Manuscripts/Sawietal_2021/SawiEtAl_2021/data/external/GarciaEtAl_2019/processed/lakeshore_y.csv',names=['y'])
-    
+
         ##adjusted manually
         lakexcsv['x'] = lakexcsv['x'] + 220980
         lakeycsv['y'] = lakeycsv['y'] + -5000410
-        
-        ax.plot(lakexcsv.x,lakeycsv.y,color='steelblue')
-        ax.fill(lakexcsv['x'], lakeycsv['y'],color='steelblue',alpha=.2)    
-        ### END plot lake shore boundary    
-    
 
-    
+        ax.plot(lakexcsv.x,lakeycsv.y,color='steelblue')
+        ax.fill(lakexcsv['x'], lakeycsv['y'],color='steelblue',alpha=.2)
+        ### END plot lake shore boundary
+
+
+
 
     ##some possible map settings
     try:
@@ -486,11 +486,11 @@ def plotMap(cat_map,colorBy='all',k=1,ax=None,size=10,alpha=.7, map_lim=None,buf
     except:
         try:
             x = cat_map.lat
-            y = cat_map.lon    
+            y = cat_map.lon
         except:
             try:
                 x = cat_map.lat
-                y = cat_map.long 
+                y = cat_map.long
             except:
                 pass
 
@@ -512,7 +512,7 @@ def plotMap(cat_map,colorBy='all',k=1,ax=None,size=10,alpha=.7, map_lim=None,buf
         for i,k in enumerate(cat_rand.Cluster):
             x = cat_rand.X_m.iloc[i]
             y = cat_rand.Y_m.iloc[i]
-            
+
             if edgecolor=='cluster':
                 label = f'C{k}'
                 ax.scatter(x, y,
@@ -523,9 +523,9 @@ def plotMap(cat_map,colorBy='all',k=1,ax=None,size=10,alpha=.7, map_lim=None,buf
                              alpha=alpha,
                              label = label,
                              marker=marker);
-                
+
             else: # borkder is black, facecolor is by cluster
-                
+
                 ax.scatter(x, y,
                              color=colors[k-1],
                              edgecolors='k',
@@ -567,7 +567,6 @@ def plotMap(cat_map,colorBy='all',k=1,ax=None,size=10,alpha=.7, map_lim=None,buf
 #         cbar = plt.colorbar(sm,label='Date, 2007',orientation='horizontal',shrink=.8);
 #         cbar.ax.set_xticklabels(pd.to_datetime(cbar.get_ticks()).strftime(date_format='%b %d'))
 
-
 #     if map_lim is None:
 #         ax.set_xlim(cat_map.X_m.min()-buff,cat_map.X_m.max()+buff)
 #         ax.set_ylim(cat_map.Y_m.min()-buff,cat_map.Y_m.max()+buff)
@@ -576,6 +575,64 @@ def plotMap(cat_map,colorBy='all',k=1,ax=None,size=10,alpha=.7, map_lim=None,buf
 #         ax.set_ylim(map_lim[1][0],map_lim[1][1])
 
     # ax.set_xticks([])
+
+
+
+
+
+
+
+def plotMapGMT(cat_feat,stat_df,buff,colorBy='depth_km',maxColor=10):
+
+
+    cat_star = cat_feat[colorBy]
+
+    region = [
+        cat_feat.long.min() - buff,
+        cat_feat.long.max() + buff,
+        cat_feat.lat.min() - buff,
+        cat_feat.lat.max() + buff,
+    ]
+
+    print(region)
+
+
+    fig = pygmt.Figure()
+    fig.basemap(region=region, projection="M15c", frame=True)
+    fig.coast(land="black", water="skyblue")
+
+    if maxColor is not None:
+        pygmt.makecpt(cmap="viridis", series=[cat_star.min(), maxColor])
+    else:
+        pygmt.makecpt(cmap="viridis", series=[cat_star.min(), cat_star.max()])
+
+    fig.plot(
+        x=cat_feat.long,
+        y=cat_feat.lat,
+        size=0.05 * 2 ** cat_feat.magnitude,
+        color=cat_star,
+        cmap=True,
+        style="cc",
+        pen="black",
+    )
+
+    if 'depth' in colorBy:
+        fig.colorbar(frame='af+l"Depth (km)"')
+
+    else:
+        fig.colorbar(frame=f'af+l"{colorBy}"')
+
+    fig.plot(x=stat_df.long, y=stat_df.lat,style="t.5c", color="pink", pen="black")
+
+
+
+
+    fig.show()
+
+    return fig
+
+
+
 
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 def plotStations(stn,station,size=80,ax=None):
@@ -1145,7 +1202,7 @@ def plotLake(lake_df,rain_df,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_
 #         if ylabel == 'right':
 #             ax3.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
 #             ax.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
-            
+
 #         if ylabel == 'left':
 #             ax.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
 #             ax3.legend(loc='upper left',bbox_to_anchor=(bb1,bb2))
@@ -1525,7 +1582,7 @@ def plotCCMatrix(catCC,shift_cc,dataH5_path,station,channel,fmin,fmax,fs,ax=None
 
     if ax is None:
         ax = plt.gca()
-    
+
     cc_mat = np.zeros([len(catCC),len(catCC)])
     lag_mat = np.zeros([len(catCC),len(catCC)])
 

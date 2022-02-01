@@ -6,7 +6,7 @@ import numpy as np
 from obspy import read
 from scipy.fft import fft, fftfreq
 from obspy.signal.cross_correlation import correlate, xcorr_max
-
+import matplotlib.pyplot as plt
 import datetime as dtt
 
 import datetime
@@ -86,6 +86,33 @@ def dateToEventID(cat):
 
 
 def getWF(evID,dataH5_path,station,channel,fmin,fmax,fs):
+    """
+    Load waveform data from H5 file, apply 4th order bandpass filter,
+    and zero mean
+
+    Parameters
+    ----------
+    evID : int
+    .
+    dataH5_path : str
+    .
+    station : str
+    .
+    channel : str
+    .
+    fmin : int or float
+    Minimum frequency for bandpass filter.
+    fmax : int or float
+    Maximum frequency for bandpass filter.
+    fs : int
+    Sampling rate.
+
+    Returns
+    -------
+    wf_zeromean : numpy array
+    Filtered and zero-meaned waveform array.
+
+    """
 
     with h5py.File(dataH5_path,'a') as fileLoad:
 
@@ -118,6 +145,9 @@ def getSpectra(evID,station,path_proj,normed=True):
 
     mat.get('fSTFT')
     return matSum,specMat
+
+
+
 
 def getSpectra_fromWF(evID,dataH5_path,station,channel,normed=True):
 ## get WF from H5 and calc full sgram for plotting
@@ -365,7 +395,24 @@ def getMaxIndexFP(fp):
 ##################################################################################################
 
 
-def getFeatures(catalog,filetype,fmin,fmax,fs,path_WF,nfft,dataH5_path,station,channel):
+def getFeatures(catalog,dataH5_path,station,channel,fmin,fmax,fs,nfft,):
+    """
+    Calculate features for waveforms and spectra
+
+    Parameters
+    ----------
+    catalog : pandas Dataframe
+
+    fs : int
+        Sampling rate.
+    nfft : TYPE
+        padding for spectra.
+
+    Returns
+    -------
+    None.
+
+    """
 
     columns=['event_ID','datetime','datetime_index','Cluster','RSAM','SC','P2P','VAR']
     df = pd.DataFrame(columns=columns)
@@ -428,7 +475,72 @@ def getFeatures(catalog,filetype,fmin,fmax,fs,path_WF,nfft,dataH5_path,station,c
 
     return df
 
+def getFeatures_Explore(catalog,dataH5_path,station,channel,fmin,fmax,fs,nfft,):
+    """
+    Read waveforms from H5, calculate features prior to SpecUFEx
+    Return dataframe with features indexed by datetime
 
+    Parameters
+    ----------
+    catalog : pandas Dataframe
+        Needed for event IDs; need columns called 'ev_ID' and 'timestamp'
+    fs : int
+        Sampling rate.
+    nfft : int
+        padding for spectra.
+
+    Returns
+    -------
+    df : pandas Dataframe
+        Data frame of features by event ID.
+    """
+
+
+
+    columns=['ev_ID','log10RSAM','SpecCentr','log10P2P','log10Var','Kurt','DomFreq']
+    df = pd.DataFrame(columns=columns)
+
+
+    for i,evID in enumerate(catalog.event_ID):
+
+
+
+        wf_filter = getWF(evID,dataH5_path,station,channel,fmin,fmax,fs)
+
+        # date = pd.to_datetime(catalog.timestamp.iloc[i])
+
+
+        RSAM = np.log10(np.sum(np.abs(wf_filter)))
+
+        sc = np.mean(librosa.feature.spectral_centroid(y=np.array(wf_filter), sr=fs))
+
+
+        ### calculate dominant frequency
+        f = np.fft.fft(wf_filter)
+        f_real = np.real(f)
+        mag_spec = plt.magnitude_spectrum(f_real,Fs=fs, scale='linear',pad_to=nfft)[0]
+        freqs = plt.magnitude_spectrum(f_real,Fs=fs, scale='linear',pad_to=nfft)[1]
+        dominant_freq = freqs[np.where(mag_spec == mag_spec.max())]
+        plt.close()
+
+        var = np.log10(np.var(wf_filter))
+        p2p = np.log10(np.max(wf_filter) - np.min(wf_filter))
+        kurt = kurtosis(wf_filter)
+
+        df = df.append(
+                  {'ev_ID':evID,
+                   # 'datetime_index':date,
+                   'log10RSAM':RSAM,
+                   'SpecCentr':sc,
+                   'log10P2P':p2p,
+                   'log10Var':var,
+                   'Kurt':kurt,
+                   'DomFreq':dominant_freq[0]},
+                   ignore_index=True)
+
+    # df = df.set_index('datetime_index')
+
+    return df
 
 
 def getLocationFeatures(map_catalog,stn,station):
@@ -477,7 +589,32 @@ def getLocationFeatures(map_catalog,stn,station):
     return df_loc
 
 
+def dataframe2hdf(cat, dataH5_path):
+#     df: pandas.DataFrame
+#         DataFrame to save
+#     dataH5_path: h5py group path
+#
+#
+#     Returns
+#     -------
+#     Nothing
 
+
+    with h5py.File(dataH5_path,'a') as h5file:
+
+        try:
+            del h5file["catalog/"]
+        except:
+            pass
+
+        group =  h5file.create_group("catalog/")
+
+        for col in cat.columns:
+            try:
+                group.create_dataset(name=col, data=df[col])
+            except:
+                group.create_dataset(name=col,
+                                     data=np.array(cat[col],dtype='S'))
 
 def getNMFOrder(W,numPatterns):
     maxColVal = np.zeros(numPatterns)
@@ -587,7 +724,28 @@ def PCAonFP(path_proj,outfile_name,cat00,numPCA=3,stand=True):
 # .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo..oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo
 
 def PVEofPCA(path_proj,outfile_name,cat00,numPCMax=100,cum_pve_thresh=.8,stand='MinMax'):
+    """
+    Parameters
+    ----------
+    X : numpy array
+        Linearized fingerprints.
+    numPCMax : int, optional
+        Maximum number of principal components. The default is 100.
+    cum_pve_thresh : int or float, optional
+        Keep PCs until cumulative PVE reaches threshold. The default is .8.
+    stand : str, optional
+        Parameter for SKLearn's StandardScalar(). The default is 'MinMax'.
 
+    Returns
+    -------
+    PCA_df : pandas dataframe
+        Columns are PCs, rows are event.
+    numPCA : int
+        Number of PCs calculated.
+    cum_pve : float
+        Cumulative PVE.
+
+    """
     X = linearizeFP(path_proj,outfile_name,cat00)
 
 
@@ -685,10 +843,10 @@ def getTopFCat(cat,topF=1,startInd=0,distMeasure = "SilhScore"):
     cat_topF['Cluster'] = [int(c) for c in cat_topF.Cluster];
 
     cat_topF['datetime_index'] = [pd.to_datetime(d) for d in cat_topF.datetime];
-    
+
     if distMeasure == "SilhScore":
         cat_topF = cat_topF.sort_values(by =['Cluster','SS'])
-        
+
 
     if distMeasure == "EucDist":
         cat_topF = cat_topF.sort_values(by =['Cluster','euc_dist'])
@@ -810,16 +968,16 @@ def calcSilhScore(path_proj,outfile_name,cat00,range_n_clusters,numPCA,distMeasu
 def calcCCMatrix(catRep,shift_cc,dataH5_path,station,channel,fmin,fmax,fs):
     '''
     catRep   : (pandas.Dataframe) catalog with event IDs
-    
-    shift_cc : (int) Number of samples to shift for cross correlation. 
-                    The cross-correlation will consist of 2*shift+1 or 
+
+    shift_cc : (int) Number of samples to shift for cross correlation.
+                    The cross-correlation will consist of 2*shift+1 or
                     2*shift samples. The sample with zero shift will be in the middle.
-                    
-    
+
+
     Returns np.array
-    
-    '''    
-    
+
+    '''
+
     cc_mat = np.zeros([len(catRep),len(catRep)])
     lag_mat = np.zeros([len(catRep),len(catRep)])
 
@@ -849,24 +1007,24 @@ def calcCCMatrix(catRep,shift_cc,dataH5_path,station,channel,fmin,fmax,fs):
 
 def calcCorr_template(wf_A,catRep,shift_cc,dataH5_path,station,channel,fmin,fmax,fs):
     ''' Calculate cross-correlation matrix and lag time for max CC coeg=f
-    
-    wf_A     : (np.array) wf template to match other waveforms 
-    
+
+    wf_A     : (np.array) wf template to match other waveforms
+
     catRep   : (pandas.Dataframe) catalog with event IDs
-    
-    shift_cc : (int) Number of samples to shift for cross correlation. 
-                    The cross-correlation will consist of 2*shift+1 or 
+
+    shift_cc : (int) Number of samples to shift for cross correlation.
+                    The cross-correlation will consist of 2*shift+1 or
                     2*shift samples. The sample with zero shift will be in the middle.
-                    
-    
+
+
     Returns np.array
     '''
 
-    
+
     cc_vec = np.zeros([len(catRep)]) #list cc coef
-    
+
     lag_vec = np.zeros([len(catRep)]) #list lag time (samples) to get max cc coef
-    
+
 
     for j in range(len(catRep)):
 
@@ -895,7 +1053,7 @@ def lagWF_Scalar(waveform, lag0, index_wf):
     Parameters
     ----------
     waveform : np.array
-    
+
     lag0 : int
         Scalar from lag vector lag_vec, output of calcCorr_template.
     index_wf : int
@@ -909,15 +1067,15 @@ def lagWF_Scalar(waveform, lag0, index_wf):
 
 
     i = index_wf
-    
+
     #
     if lag0<0:
 #         print('neg lag', lag0[i])
         isNeg = 1
         lag00 = int(np.abs(lag0)) #convert to int
     else:
-#         print('pos lag', lag0[i])        
-        isNeg = 0        
+#         print('pos lag', lag0[i])
+        isNeg = 0
         lag00 = int(lag0)
 
 
@@ -927,14 +1085,14 @@ def lagWF_Scalar(waveform, lag0, index_wf):
     if isNeg:
         waveform_shift = np.hstack([waveform,padZ])
         waveform_shift2 = waveform_shift[lag00:]
-        
+
     else:
         waveform_shift = np.hstack([padZ,waveform])
         waveform_shift2 = waveform_shift[:-lag00]
-    
+
     if lag0[i]==0 or lag0[i]==0.0:
         waveform_shift2 = waveform
-        
+
     return waveform_shift2
 
 
@@ -946,7 +1104,7 @@ def lagWF(waveform, lag0, index_wf):
     Parameters
     ----------
     waveform : np.array
-    
+
     lag0 : np.array
         Matris of lag times; output of calcCC_Mat.
     index_wf : int
@@ -960,15 +1118,15 @@ def lagWF(waveform, lag0, index_wf):
 
 
     i = index_wf
-    
+
     #
     if lag0[i]<0:
 #         print('neg lag', lag0[i])
         isNeg = 1
         lag00 = int(np.abs(lag0[i])) #convert to int
     else:
-#         print('pos lag', lag0[i])        
-        isNeg = 0        
+#         print('pos lag', lag0[i])
+        isNeg = 0
         lag00 = int(lag0[i])
 
 
@@ -978,14 +1136,14 @@ def lagWF(waveform, lag0, index_wf):
     if isNeg:
         waveform_shift = np.hstack([waveform,padZ])
         waveform_shift2 = waveform_shift[lag00:]
-        
+
     else:
         waveform_shift = np.hstack([padZ,waveform])
         waveform_shift2 = waveform_shift[:-lag00]
-    
+
     if lag0[i]==0 or lag0[i]==0.0:
         waveform_shift2 = waveform
-        
+
     return waveform_shift2
 
 
@@ -1168,7 +1326,7 @@ def swapLabels(cat,A,B):
 
     """
 
-    
+
 
 ## swap label A to B
     dummy_variable = 999
