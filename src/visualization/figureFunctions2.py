@@ -303,7 +303,6 @@ def plotFeaturesTimeline(df,Kopt,feature,size=3,ax=None,**plt_kwargs):
     ax.set_xticks(day_ticks)
     ax.set_xticklabels(day_labels)
 #     plt.tight_layout()
-#     plt.ylim(-1e7,4e7)
     # plt.ylim(-1e7,train_set['log10abs_sum'].max())
     ax.set_ylabel(feature)
 
@@ -844,11 +843,16 @@ def plotHourBarStack(cat00,Kopt,dailyTempDiff,labelpad=10,label='right',ax=None,
     ax2 = ax.twinx()
     ax2.plot(dailyTempDiff,lw=2,color='k',ls='--')
     # [t.set_color('r') for t in ax2.yaxis.get_ticklabels()]
-    if label == 'right':
-        ax2.set_ylabel('T ($^\circ$C)', color='k',labelpad=labelpad)
-    else:
-        ax2.set_ylabel('')
-        ax2.set_yticklabels([])
+    
+#     ax2.set_ylabel('')
+    ax2.set_yticks([-2.5,0,2.5])
+    ax2.set_yticklabels(['  -2.5','   0    T ($^\circ$C)','+2.5'])
+    
+#     if label == 'right':
+#         ax2.set_ylabel('T ($^\circ$C)', color='k',labelpad=labelpad)
+#     else:
+#         ax2.set_ylabel('')
+#         ax2.set_yticklabels([])
 
     ax.set_xticks(np.arange(0,24,6))
 
@@ -889,13 +893,13 @@ def plotHourBar(cat00,Kopt,dailyTempDiff,ax=None,labelpad=10,label='right',color
 
         ##plotTempLine
     ax2 = ax.twinx()
-    ax2.plot(dailyTempDiff,lw=1,color='darkred',ls='--',alpha=.5)
+    ax2.plot(dailyTempDiff,lw=3,color='red',ls='--',alpha=.9)
     if label=='right':
 
-        [t.set_color('darkred') for t in ax2.yaxis.get_ticklabels()]
+        [t.set_color('red') for t in ax2.yaxis.get_ticklabels()]
         ax2.set_ylabel('')
         ax2.set_yticks([-2.5,0,2.5])
-        ax2.set_yticklabels([' -2.5','   0    T ($^\circ$C)','+2.5'])
+        ax2.set_yticklabels(['  -2.5','   0    T ($^\circ$C)','+2.5'])
 
 
 
@@ -1182,7 +1186,7 @@ def plotLake(lake_df,rain_df,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_
     [t.set_color('b') for t in ax3.yaxis.get_ticklabels()]
 
 
-    ax3.plot(lake_df.lake,c='b',lw=4,ls='--',label=label)
+    ax3.plot(lake_df.lake,c='b',lw=3,ls='--',label=label)
 
     rain10 = rain_df * 10 #convert cm to mm
     ax3.plot(rain10,c='b',label=labelR,lw=1)
@@ -1209,7 +1213,10 @@ def plotLake(lake_df,rain_df,ax=None,ylabel=None,legend=False,bb1=0,bb2=2,**plt_
 
     ax3.set_xlim(tstart,tend)
     ax.set_xlim(tstart,tend)
-
+    ax3.set_ylim(bottom=0)
+    ax.set_ylim(bottom=0)
+    
+    
 def plotTemp(temp_series,ax=None,labels='on',**plt_kwargs):
 
     if ax is None:
@@ -1460,6 +1467,61 @@ def plotPCA_Stat(cat00, catall, df_stat, stat_name, Kopt, cmap,cbar=True,size=5,
     ax.set_zticklabels(tick_labels)
 
 
+    
+
+def plotPCA2D(cat00,catall,Kopt, size=5,size2=15, alpha=.5,labelpad = 5,fontsize=8,ax=None, fig=None, **plt_kwargs):
+
+
+    colors      =     plt_kwargs['colors']
+
+
+    if fig is None:
+        fig = plt.gcf()
+
+    if ax is None:
+        ax = plt.gca()
+
+
+
+    for k in range(1,Kopt+1):
+
+        catk = cat00[cat00.Cluster == k]
+        ax.scatter(catk.PC1,catk.PC2,
+                      s=size,
+                      marker='x',
+                      color=colors[k-1],
+                      alpha=alpha)
+
+
+# plot top FPs
+    ax.scatter(catall.PC1,catall.PC2,
+                      s=size2,
+                      marker='x',
+                      color='k',
+                      alpha=1)
+
+    # sm = plt.cm.ScalarMappable(cmap=colors,
+    #                            norm=plt.Normalize(vmin=df_stat.Cluster(),vmax=df_stat.Cluster()))
+    axLabel = 'Principal component'#'Principal component '#label for plotting
+    # cbar = plt.colorbar(sm,label=stat_name,shrink=.6,pad=.3);
+
+    ax.set_xlabel(f'{axLabel} 1',labelpad=labelpad, fontsize = fontsize);
+    ax.set_ylabel(f'{axLabel} 2',labelpad=labelpad, fontsize = fontsize);
+
+
+    ax.set_xlim(-.6,.6)
+    ax.set_ylim(-.6,.6)
+
+
+    ticks =  np.linspace(-.6,.6,5)
+    tick_labels = [f'{t:.1f}' for t in ticks]
+    ax.set_xticks(ticks)
+    ax.set_xticklabels(tick_labels)
+    ax.set_yticks(ticks)
+    ax.set_yticklabels(tick_labels)
+
+
+
 
 
 def plot_pca_components(x, coefficients=None, mean=0, components=None,
@@ -1530,10 +1592,13 @@ def plotSSE(Kopt2, sse,range_n_clusters,starSize=1.5,ax=None):
 
     ax.plot(range_n_clusters, sse,color='k')
     ax.plot(Kopt2, sse[Kopt2-2],color='orange',marker='*',ms=starSize)
+    
     ax.set_xticks([int(r) for r in range_n_clusters])
     ax.set_xticklabels([str(r) for r in range_n_clusters])
+    
     ax.set_xlabel('Number of clusters')
     ax.set_ylabel('Sum of squared error')
+    
     ax.grid()
 
 
